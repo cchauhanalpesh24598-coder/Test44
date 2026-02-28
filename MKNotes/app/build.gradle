@@ -4,33 +4,31 @@ plugins {
 }
 
 android {
-    compileSdk 34
+    compileSdk 36
     namespace "com.mknotes.app"
 
     defaultConfig {
         applicationId "com.mknotes.app"
         minSdk 26
-        targetSdk 34
+        targetSdk 36
         versionCode 1
         versionName "1.0"
         multiDexEnabled true
+    }
+
+    buildFeatures {
+        buildConfig true
     }
 
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-            // Use debug signing for direct APK install (no Play Store)
-            signingConfig signingConfigs.debug
         }
         debug {
             minifyEnabled false
             debuggable true
         }
-    }
-
-    buildFeatures {
-        buildConfig true
     }
 
     compileOptions {
@@ -51,14 +49,12 @@ android {
 }
 
 dependencies {
-    // Firebase BOM - latest stable
     implementation platform('com.google.firebase:firebase-bom:33.7.0')
     implementation 'com.google.firebase:firebase-auth'
     implementation 'com.google.firebase:firebase-firestore'
     implementation 'com.google.firebase:firebase-appcheck-playintegrity'
     implementation 'com.google.firebase:firebase-appcheck-debug'
 
-    // AndroidX
     implementation 'androidx.core:core:1.13.1'
     implementation 'androidx.appcompat:appcompat:1.7.0'
     implementation 'com.google.android.material:material:1.12.0'
