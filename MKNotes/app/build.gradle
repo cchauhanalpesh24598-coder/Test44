@@ -15,9 +15,7 @@ android {
         versionName "1.0"
         multiDexEnabled true
     }
-    buildFeatures {
-        buildConfig true
-    }
+
     buildTypes {
         release {
             minifyEnabled false
@@ -29,6 +27,10 @@ android {
             minifyEnabled false
             debuggable true
         }
+    }
+
+    buildFeatures {
+        buildConfig true
     }
 
     compileOptions {
