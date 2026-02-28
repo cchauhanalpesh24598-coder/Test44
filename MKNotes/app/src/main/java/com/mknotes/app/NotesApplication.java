@@ -6,6 +6,7 @@ import android.app.NotificationManager;
 import android.os.Build;
 import android.os.StrictMode;
 import android.util.Log;
+import android.widget.Toast;
 
 import androidx.lifecycle.ProcessLifecycleOwner;
 
@@ -51,60 +52,44 @@ public class NotesApplication extends Application {
         return sFirebaseAvailable;
     }
 
+    @Override
     public void onCreate() {
         super.onCreate();
 
-        // Allow file:// URIs to be shared with external apps
-        try {
-            StrictMode.VmPolicy.Builder builder = new StrictMode.VmPolicy.Builder();
-            StrictMode.setVmPolicy(builder.build());
-        } catch (Throwable t) {
-            Log.e(TAG, "StrictMode setup failed: " + t.getMessage());
-        }
+        StrictMode.VmPolicy.Builder builder = new StrictMode.VmPolicy.Builder();
+        StrictMode.setVmPolicy(builder.build());
 
-        // Notification channels (safe, no external dependencies)
-        try {
-            createNotificationChannels();
-        } catch (Throwable t) {
-            Log.e(TAG, "Notification channel creation failed: " + t.getMessage());
-        }
+        createNotificationChannels();
 
-        // Firebase initialization -- must happen before App Check
         try {
-            FirebaseApp.initializeApp(this);
-            sFirebaseAvailable = true;
-            Log.d(TAG, "FirebaseApp initialized successfully");
-        } catch (Throwable t) {
-            sFirebaseAvailable = false;
-            Log.e(TAG, "FirebaseApp init failed (app continues without Firebase): " + t.getMessage());
-        }
-
-        // Firebase App Check (only if Firebase is available)
-        if (sFirebaseAvailable) {
             initFirebaseAppCheck();
+        } catch (Throwable e) {
+            log("Firebase fail: " + e.getMessage());
         }
 
-        // Initialize KeyManager singleton (safe -- only accesses SharedPreferences)
         try {
             KeyManager.getInstance(this);
-        } catch (Throwable t) {
-            Log.e(TAG, "KeyManager init failed: " + t.getMessage());
+        } catch (Throwable e) {
+            log("KeyManager fail: " + e.getMessage());
         }
 
-        // Register ProcessLifecycleOwner for auto-lock
         try {
             ProcessLifecycleOwner.get().getLifecycle()
-                    .addObserver(SessionManager.getInstance(this));
-        } catch (Throwable t) {
-            Log.e(TAG, "ProcessLifecycleOwner registration failed: " + t.getMessage());
+                .addObserver(SessionManager.getInstance(this));
+        } catch (Throwable e) {
+            log("SessionManager fail: " + e.getMessage());
         }
 
-        // Auto-delete trash notes older than 30 days on app startup
         try {
             NotesRepository.getInstance(this).cleanupOldTrash();
-        } catch (Throwable t) {
-            Log.e(TAG, "Trash cleanup failed (non-fatal): " + t.getMessage());
+        } catch (Throwable e) {
+            log("Repository fail: " + e.getMessage());
         }
+    }
+
+    private void log(String msg) {
+        android.util.Log.e("MKNotes_CRASH", msg);
+        android.widget.Toast.makeText(this, msg, android.widget.Toast.LENGTH_LONG).show();
     }
 
     /**
@@ -114,6 +99,10 @@ public class NotesApplication extends Application {
      */
     private void initFirebaseAppCheck() {
         try {
+            FirebaseApp.initializeApp(this);
+            sFirebaseAvailable = true;
+            Log.d(TAG, "FirebaseApp initialized successfully");
+            
             FirebaseApp app = FirebaseApp.getInstance();
             FirebaseAppCheck firebaseAppCheck = FirebaseAppCheck.getInstance(app);
 
@@ -129,9 +118,10 @@ public class NotesApplication extends Application {
                 Log.d(TAG, "Firebase App Check: Play Integrity provider installed");
             }
         } catch (Throwable t) {
-            // Catches both Exception AND Error (e.g. NoClassDefFoundError for BuildConfig)
+            sFirebaseAvailable = false;
             Log.e(TAG, "Firebase App Check init failed: " + t.getMessage());
             // Non-fatal: app continues without App Check enforcement
+            throw t; // Re-throw to be caught by caller's try-catch
         }
     }
 
