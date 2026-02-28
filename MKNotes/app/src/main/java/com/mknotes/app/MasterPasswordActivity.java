@@ -1,6 +1,6 @@
 package com.mknotes.app;
 
-import android.app.Activity;
+import androidx.appcompat.app.AppCompatActivity;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
@@ -30,8 +30,7 @@ import com.mknotes.app.util.SessionManager;
  * Wrong password returns error message, never crashes.
  * Missing Firebase or network returns safe defaults.
  */
-public class MasterPasswordActivity extends Activity {
-
+public class MasterPasswordActivity extends AppCompatActivity {
     private static final String TAG = "MasterPassword";
     private static final int MODE_CREATE = 0;
     private static final int MODE_UNLOCK = 1;
