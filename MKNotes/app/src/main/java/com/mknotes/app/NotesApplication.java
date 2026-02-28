@@ -58,15 +58,15 @@ public class NotesApplication extends Application {
         try {
             StrictMode.VmPolicy.Builder builder = new StrictMode.VmPolicy.Builder();
             StrictMode.setVmPolicy(builder.build());
-        } catch (Exception e) {
-            Log.e(TAG, "StrictMode setup failed: " + e.getMessage());
+        } catch (Throwable t) {
+            Log.e(TAG, "StrictMode setup failed: " + t.getMessage());
         }
 
         // Notification channels (safe, no external dependencies)
         try {
             createNotificationChannels();
-        } catch (Exception e) {
-            Log.e(TAG, "Notification channel creation failed: " + e.getMessage());
+        } catch (Throwable t) {
+            Log.e(TAG, "Notification channel creation failed: " + t.getMessage());
         }
 
         // Firebase initialization -- must happen before App Check
@@ -74,9 +74,9 @@ public class NotesApplication extends Application {
             FirebaseApp.initializeApp(this);
             sFirebaseAvailable = true;
             Log.d(TAG, "FirebaseApp initialized successfully");
-        } catch (Exception e) {
+        } catch (Throwable t) {
             sFirebaseAvailable = false;
-            Log.e(TAG, "FirebaseApp init failed (app continues without Firebase): " + e.getMessage());
+            Log.e(TAG, "FirebaseApp init failed (app continues without Firebase): " + t.getMessage());
         }
 
         // Firebase App Check (only if Firebase is available)
@@ -87,23 +87,23 @@ public class NotesApplication extends Application {
         // Initialize KeyManager singleton (safe -- only accesses SharedPreferences)
         try {
             KeyManager.getInstance(this);
-        } catch (Exception e) {
-            Log.e(TAG, "KeyManager init failed: " + e.getMessage());
+        } catch (Throwable t) {
+            Log.e(TAG, "KeyManager init failed: " + t.getMessage());
         }
 
         // Register ProcessLifecycleOwner for auto-lock
         try {
             ProcessLifecycleOwner.get().getLifecycle()
                     .addObserver(SessionManager.getInstance(this));
-        } catch (Exception e) {
-            Log.e(TAG, "ProcessLifecycleOwner registration failed: " + e.getMessage());
+        } catch (Throwable t) {
+            Log.e(TAG, "ProcessLifecycleOwner registration failed: " + t.getMessage());
         }
 
         // Auto-delete trash notes older than 30 days on app startup
         try {
             NotesRepository.getInstance(this).cleanupOldTrash();
-        } catch (Exception e) {
-            Log.e(TAG, "Trash cleanup failed (non-fatal): " + e.getMessage());
+        } catch (Throwable t) {
+            Log.e(TAG, "Trash cleanup failed (non-fatal): " + t.getMessage());
         }
     }
 
@@ -128,8 +128,9 @@ public class NotesApplication extends Application {
                 );
                 Log.d(TAG, "Firebase App Check: Play Integrity provider installed");
             }
-        } catch (Exception e) {
-            Log.e(TAG, "Firebase App Check init failed: " + e.getMessage());
+        } catch (Throwable t) {
+            // Catches both Exception AND Error (e.g. NoClassDefFoundError for BuildConfig)
+            Log.e(TAG, "Firebase App Check init failed: " + t.getMessage());
             // Non-fatal: app continues without App Check enforcement
         }
     }
