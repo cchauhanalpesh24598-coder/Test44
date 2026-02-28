@@ -38,6 +38,14 @@ public class FirebaseLoginActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // If Firebase is not available, skip directly to offline mode
+        if (!NotesApplication.isFirebaseAvailable()) {
+            PrefsManager.getInstance(this).setCloudSyncEnabled(false);
+            launchMain();
+            return;
+        }
+
         setContentView(R.layout.activity_firebase_login);
 
         authManager = FirebaseAuthManager.getInstance(this);
