@@ -18,6 +18,7 @@ import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.firestore.SetOptions;
 import com.google.firebase.firestore.WriteBatch;
 
+import com.mknotes.app.NotesApplication;
 import com.mknotes.app.crypto.KeyManager;
 import com.mknotes.app.db.NotesRepository;
 import com.mknotes.app.model.Note;
@@ -75,8 +76,18 @@ public class CloudSyncManager {
 
     private CloudSyncManager(Context context) {
         this.appContext = context;
-        this.firestore = FirebaseFirestore.getInstance();
-        ensureOfflinePersistence();
+        try {
+            if (NotesApplication.isFirebaseAvailable()) {
+                this.firestore = FirebaseFirestore.getInstance();
+                ensureOfflinePersistence();
+            } else {
+                this.firestore = null;
+                Log.w(TAG, "Firestore not initialized: Firebase unavailable");
+            }
+        } catch (Exception e) {
+            this.firestore = null;
+            Log.e(TAG, "Firestore init failed: " + e.getMessage());
+        }
     }
 
     // ======================== OFFLINE PERSISTENCE ========================
@@ -110,6 +121,12 @@ public class CloudSyncManager {
      * Requires: sync enabled, Firebase logged in, session valid.
      */
     private boolean canSync() {
+        if (firestore == null) {
+            return false;
+        }
+        if (!NotesApplication.isFirebaseAvailable()) {
+            return false;
+        }
         if (!PrefsManager.getInstance(appContext).isCloudSyncEnabled()) {
             return false;
         }
