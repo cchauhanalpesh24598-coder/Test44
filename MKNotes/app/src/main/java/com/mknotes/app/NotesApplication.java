@@ -28,6 +28,10 @@ import com.mknotes.app.util.SessionManager;
  * - KeyManager singleton
  * - Notification channels
  * - Auto-cleanup of old trash notes
+ *
+ * SAFETY: Every initialization step is individually wrapped in try-catch
+ * to guarantee that Application.onCreate() NEVER crashes.
+ * Any failure is logged and skipped -- the app will still open.
  */
 public class NotesApplication extends Application {
 
@@ -36,31 +40,70 @@ public class NotesApplication extends Application {
     public static final String CHANNEL_ID_REMINDER = "notes_reminder_channel";
     public static final String CHANNEL_ID_GENERAL = "notes_general_channel";
 
+    /** Flag indicating whether Firebase initialized successfully. */
+    private static boolean sFirebaseAvailable = false;
+
+    /**
+     * Check at runtime whether Firebase is available.
+     * Other classes should call this before using any Firebase API.
+     */
+    public static boolean isFirebaseAvailable() {
+        return sFirebaseAvailable;
+    }
+
     public void onCreate() {
         super.onCreate();
 
         // Allow file:// URIs to be shared with external apps
-        StrictMode.VmPolicy.Builder builder = new StrictMode.VmPolicy.Builder();
-        StrictMode.setVmPolicy(builder.build());
+        try {
+            StrictMode.VmPolicy.Builder builder = new StrictMode.VmPolicy.Builder();
+            StrictMode.setVmPolicy(builder.build());
+        } catch (Exception e) {
+            Log.e(TAG, "StrictMode setup failed: " + e.getMessage());
+        }
 
-        createNotificationChannels();
+        // Notification channels (safe, no external dependencies)
+        try {
+            createNotificationChannels();
+        } catch (Exception e) {
+            Log.e(TAG, "Notification channel creation failed: " + e.getMessage());
+        }
 
-        // Firebase initializes automatically via google-services.json plugin
-        // Initialize Firebase App Check BEFORE any Firestore calls
-        initFirebaseAppCheck();
+        // Firebase initialization -- must happen before App Check
+        try {
+            FirebaseApp.initializeApp(this);
+            sFirebaseAvailable = true;
+            Log.d(TAG, "FirebaseApp initialized successfully");
+        } catch (Exception e) {
+            sFirebaseAvailable = false;
+            Log.e(TAG, "FirebaseApp init failed (app continues without Firebase): " + e.getMessage());
+        }
 
-        // Initialize KeyManager singleton
-        KeyManager.getInstance(this);
+        // Firebase App Check (only if Firebase is available)
+        if (sFirebaseAvailable) {
+            initFirebaseAppCheck();
+        }
+
+        // Initialize KeyManager singleton (safe -- only accesses SharedPreferences)
+        try {
+            KeyManager.getInstance(this);
+        } catch (Exception e) {
+            Log.e(TAG, "KeyManager init failed: " + e.getMessage());
+        }
 
         // Register ProcessLifecycleOwner for auto-lock
-        ProcessLifecycleOwner.get().getLifecycle()
-                .addObserver(SessionManager.getInstance(this));
+        try {
+            ProcessLifecycleOwner.get().getLifecycle()
+                    .addObserver(SessionManager.getInstance(this));
+        } catch (Exception e) {
+            Log.e(TAG, "ProcessLifecycleOwner registration failed: " + e.getMessage());
+        }
 
         // Auto-delete trash notes older than 30 days on app startup
         try {
             NotesRepository.getInstance(this).cleanupOldTrash();
         } catch (Exception e) {
-            // Fail silently - don't block app startup
+            Log.e(TAG, "Trash cleanup failed (non-fatal): " + e.getMessage());
         }
     }
 
