@@ -7,6 +7,7 @@ import android.util.Log;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.SetOptions;
 
+import com.mknotes.app.NotesApplication;
 import com.mknotes.app.cloud.FirebaseAuthManager;
 
 import java.util.Arrays;
@@ -471,6 +472,10 @@ public class KeyManager {
      */
     public void uploadVaultToFirestore() {
         try {
+            if (!NotesApplication.isFirebaseAvailable()) {
+                Log.w(TAG, "Cannot upload vault: Firebase not available");
+                return;
+            }
             FirebaseAuthManager authManager = FirebaseAuthManager.getInstance(appContext);
             if (!authManager.isLoggedIn()) {
                 Log.w(TAG, "Cannot upload vault: not logged in");
@@ -510,6 +515,10 @@ public class KeyManager {
      */
     public void fetchVaultFromFirestore(final VaultFetchCallback callback) {
         try {
+            if (!NotesApplication.isFirebaseAvailable()) {
+                if (callback != null) callback.onVaultFetched(false);
+                return;
+            }
             FirebaseAuthManager authManager = FirebaseAuthManager.getInstance(appContext);
             if (!authManager.isLoggedIn()) {
                 if (callback != null) callback.onVaultFetched(false);
