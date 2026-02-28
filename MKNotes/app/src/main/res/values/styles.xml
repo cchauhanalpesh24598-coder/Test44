@@ -1,18 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <!-- Base App Theme - MaterialComponents for proper widget styling -->
+    <!-- Android 15/16 Compatible Theme -->
     <style name="AppTheme" parent="Theme.MaterialComponents.Light.NoActionBar">
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
         <item name="colorSecondary">@color/colorAccent</item>
         <item name="android:windowBackground">@color/colorBackground</item>
-        <item name="android:statusBarColor">@color/colorPrimaryDark</item>
-        <item name="android:navigationBarColor">@color/colorSurface</item>
         <item name="android:textColorPrimary">@color/colorTextPrimary</item>
         <item name="android:textColorSecondary">@color/colorTextSecondary</item>
         <item name="android:textColorHint">@color/colorTextHint</item>
+        <!-- statusBarColor aur navigationBarColor HATA DIYA - Android 15/16 crash fix -->
     </style>
 
     <!-- Dark Theme -->
@@ -22,8 +21,6 @@
         <item name="colorAccent">@color/colorAccent</item>
         <item name="colorSecondary">@color/colorAccent</item>
         <item name="android:windowBackground">@color/colorDarkBackground</item>
-        <item name="android:statusBarColor">#FF000000</item>
-        <item name="android:navigationBarColor">@color/colorDarkSurface</item>
         <item name="android:textColorPrimary">@color/colorDarkTextPrimary</item>
         <item name="android:textColorSecondary">@color/colorDarkTextSecondary</item>
     </style>
