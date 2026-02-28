@@ -2,7 +2,7 @@ name: Build APK
 
 on:
   push:
-    branches: [ master ]
+    branches: [ master, main ]
   workflow_dispatch:
 
 jobs:
@@ -33,11 +33,18 @@ jobs:
             -validity 10000 \
             -dname "CN=Android Debug,O=Android,C=US"
 
-      - name: Download Gradle Wrapper JAR
+      - name: Install Gradle and Generate Wrapper JAR
         run: |
           mkdir -p MKNotes/gradle/wrapper
-          curl -L -o MKNotes/gradle/wrapper/gradle-wrapper.jar \
-            "https://github.com/nickmcdonnough/gradle-wrapper-jar/raw/main/gradle-wrapper.jar"
+          # Gradle install karo
+          wget -q https://services.gradle.org/distributions/gradle-8.4-bin.zip -O /tmp/gradle.zip
+          unzip -q /tmp/gradle.zip -d /tmp/gradle-dist
+          GRADLE_BIN=/tmp/gradle-dist/gradle-8.4/bin/gradle
+          chmod +x $GRADLE_BIN
+          # Wrapper JAR generate karo
+          cd MKNotes
+          $GRADLE_BIN wrapper --gradle-version 8.4
+          ls -la gradle/wrapper/
 
       - name: Make gradlew executable
         working-directory: MKNotes
