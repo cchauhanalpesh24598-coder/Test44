@@ -54,6 +54,36 @@ public class NotesApplication extends Application {
 
     @Override
     public void onCreate() {
+        Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
+            @Override
+            public void uncaughtException(Thread thread, Throwable throwable) {
+                try {
+                    StringBuilder sb = new StringBuilder();
+                    sb.append(throwable.toString()).append("\n");
+                    for (StackTraceElement el : throwable.getStackTrace()) {
+                        sb.append("at ").append(el.toString()).append("\n");
+                    }
+                    Throwable cause = throwable.getCause();
+                    while (cause != null) {
+                        sb.append("Caused by: ").append(cause.toString()).append("\n");
+                        for (StackTraceElement el : cause.getStackTrace()) {
+                            sb.append("at ").append(el.toString()).append("\n");
+                        }
+                        cause = cause.getCause();
+                    }
+                    // Downloads folder mein save
+                    java.io.File downloads = android.os.Environment
+                        .getExternalStoragePublicDirectory(
+                            android.os.Environment.DIRECTORY_DOWNLOADS);
+                    java.io.File log = new java.io.File(downloads, "mknotes_crash.txt");
+                    java.io.FileWriter fw = new java.io.FileWriter(log, false);
+                    fw.write(sb.toString());
+                    fw.close();
+                } catch (Exception ignored) {}
+                android.os.Process.killProcess(android.os.Process.myPid());
+            }
+        });
+        
         super.onCreate();
 
         StrictMode.VmPolicy.Builder builder = new StrictMode.VmPolicy.Builder();
